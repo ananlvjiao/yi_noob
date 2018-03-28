@@ -23,10 +23,11 @@ class Element(Enum):
         return Element((self.value+1)%5)
 
 class Yao(Enum):
-    LaoYin = 0
-    ShaoYin = 1
-    ShaoYang = 2
-    LaoYang = 3
+    # ord(), char() used to get integer from unicode and vice versa
+    LaoYin = 0      # 9675 ○
+    ShaoYin = 1     # 9679 ●●
+    ShaoYang = 2    # 9679 ●
+    LaoYang = 3     # 9747 ☓
 
     def dong(self):
         if not self.is_dong_able():
@@ -38,7 +39,7 @@ class Yao(Enum):
         return self is Yao.LaoYang or self is Yao.LaoYin
     
     def val(self):
-        return int(self.value >= 2)
+        return int(self._value_ >= 2)
     
 
 class BaGua(Enum):
@@ -51,12 +52,13 @@ class BaGua(Enum):
     Gen = 2, '艮'
     Kun = 1, '坤'
     
-    def __init__(self, val, fname):
+    def __init__(self, val, dname):
         self._value_= val
-        self.full_name = fname
+        self.display_name = dname
     
     def display(self):
-        bit_arr = '{0:03b}'.format(self._value_-1)
+        # value and Yao mapping relation is top down
+        bit_arr = reversed('{0:03b}'.format(self._value_-1))
         yang_str = '-'*8
         yin_str = '-'*3+' '*2+'-'*3
         desc = "\n".join(yang_str if int(v)==1 else yin_str for v in bit_arr)
@@ -65,7 +67,7 @@ class BaGua(Enum):
     @classmethod
     def Init(cls, gua):
         val = 0
-        for bit in gua:
+        for bit in reversed(gua):
             val = (val << 1) | bit
         for m in cls:
             if m._value_ == val+1:
@@ -155,7 +157,7 @@ class Hexagrams(Enum):
     @classmethod
     def Init(cls, gua):
         val = 0
-        for bit in gua:
+        for bit in reversed(gua):
             val = (val << 1) | bit
         for m in cls:
             if m._value_ == val+1:
@@ -164,13 +166,19 @@ class Hexagrams(Enum):
 
 class ZhuangGua:
     _gua = []
+    _bian_gua = []
+    _bian = False
     def __init__(self, matrix):
         if matrix is not None:
             if len(matrix)== 6:
                 for row in matrix:
                     if len(row) == 3:
+                        yao = Yao(row.count(1))
+                        if yao.is_dong_able():
+                            self._bian = True
                         # using the reversed order to pai gua
-                        self._gua.insert(0, (Yao(row.count(1)).val()))
+                        self._gua.insert(0, yao.val())
+                        self._bian_gua.insert(0, yao.dong().val())
                     else:
                         raise TypeError()
             else:
@@ -178,16 +186,23 @@ class ZhuangGua:
         else:
             raise TypeError()
 
-    def pai_gua(self):
-        print(self._gua)
-        wai_gua = BaGua.Init(self._gua[0:3])
-        nei_gua = BaGua.Init(self._gua[3:6])
-        hexagram = Hexagrams.Init(self._gua)
+    def _pai(self, gua):
+        print(gua)
+        wai_gua = BaGua.Init(gua[0:3])
+        nei_gua = BaGua.Init(gua[3:6])
+        hexagram = Hexagrams.Init(gua)
         print(hexagram.display())
         print(wai_gua.display())
         print(nei_gua.display())
+    
+    def pai_gua(self):
+        self._pai(self._gua)
+        if self._bian:
+            self._pai(self._bian_gua)
 
-matrix = [[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1]]
+
+matrix1 = [[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1]]
+matrix = [[1,1,0],[1,1,1],[1,1,1],[1,1,1],[0,0,1],[0,0,1]]
 zg = ZhuangGua(matrix)
 zg.pai_gua()
 
