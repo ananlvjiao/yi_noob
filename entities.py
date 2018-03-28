@@ -42,15 +42,26 @@ class Yao(Enum):
     
 
 class BaGua(Enum):
-    Qian = 8
-    Dui = 7
-    Li = 6
-    Zhen = 5
-    Xun = 4
-    Kan = 3
-    Gen = 2
-    Kun = 1
+    Qian = 8, '乾'
+    Dui = 7, '兑'
+    Li = 6, '离'
+    Zhen = 5, '震'
+    Xun = 4, '巽'
+    Kan = 3, '坎'
+    Gen = 2, '艮'
+    Kun = 1, '坤'
     
+    def __init__(self, val, fname):
+        self._value_= val
+        self.full_name = fname
+    
+    def display(self):
+        bit_arr = '{0:03b}'.format(self._value_-1)
+        yang_str = '-'*8
+        yin_str = '-'*3+' '*2+'-'*3
+        desc = "\n".join(yang_str if int(v)==1 else yin_str for v in bit_arr)
+        return desc
+
     @classmethod
     def Init(cls, gua):
         val = 0
@@ -136,6 +147,11 @@ class Hexagrams(Enum):
         self.full_name = fname
         self.short_name = sname
     
+    def display(self):
+        desc = '{fname}：{symbol}'.format(
+            fname = self.full_name, symbol = chr(self.unicode))
+        return desc
+
     @classmethod
     def Init(cls, gua):
         val = 0
@@ -167,9 +183,9 @@ class ZhuangGua:
         wai_gua = BaGua.Init(self._gua[0:3])
         nei_gua = BaGua.Init(self._gua[3:6])
         hexagram = Hexagrams.Init(self._gua)
-        print(wai_gua)
-        print(nei_gua)
-        print(hexagram)
+        print(hexagram.display())
+        print(wai_gua.display())
+        print(nei_gua.display())
 
 matrix = [[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1]]
 zg = ZhuangGua(matrix)
@@ -186,6 +202,5 @@ print(Yao.ShaoYin.val())
 print(Yao.ShaoYin.dong())
 print(Yao.LaoYin.dong().name)
 print(Yao.LaoYin.dong().val())
-print(chr(HexagramSymbols.Kun1.value))
 
 
